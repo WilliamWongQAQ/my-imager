@@ -1,0 +1,4 @@
+pbr >= 5.8.1 
+pychroot >= 0.10.4
+pyyaml >= 5.0
+wget >= 3.0
