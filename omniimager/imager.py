@@ -21,7 +21,8 @@ DNF_COMMAND = 'dnf'
 TYPE_VHD = 'vhd'
 TYPE_INSTALLER = 'installer-iso'
 TYPE_LIVECD = 'livecd-iso'
-SUPPORTED_BUILDTYPE = [TYPE_LIVECD, TYPE_INSTALLER, TYPE_VHD]
+TYPE_RAW = 'raw'
+SUPPORTED_BUILDTYPE = [TYPE_LIVECD, TYPE_INSTALLER, TYPE_VHD, TYPE_RAW]
 
 INITRD_PKG_LIST = [
     "filesystem", "audit", "bash", "ncurses", "ncurses-libs",
@@ -93,6 +94,29 @@ def prepare_workspace(config_options):
     return rootfs_dir, config_options['working_dir'], iso_base_dir, repo_file, rootfs_repo_dir, verbose
 
 
+def prepare_raw_workspace(config_options, image_name="test.raw"):
+    work_dir = config_options['working_dir']
+    clean_up_dir(work_dir)
+    os.makedirs(work_dir)
+    # prepare an empty rootfs folder with repo file in place
+    rootfs_dir = config_options['working_dir'] + '/' + ROOTFS_DIR
+    rootfs_repo_dir = rootfs_dir + '/etc/yum.repos.d'
+
+    repo_file = config_options['repo_file']
+
+    clean_up_dir(rootfs_dir)
+    os.makedirs(rootfs_dir)
+    os.makedirs(rootfs_repo_dir)
+    shutil.copy(repo_file, rootfs_repo_dir)
+
+    logger.debug('create a virtual image...')
+    cmd = f"dd if=/dev/zero of={work_dir}/{image_name} bs=1M count=2000"
+    subprocess.run(cmd, shell=True)
+    cmd = f"fdisk {work_dir}/{image_name}"
+    subprocess.run(cmd, shell=True)
+
+
+
 def omni_interrupt_handler(signum, frame):
     print('\nKeyboard Interrupted! Cleaning Up and Exit!')
     sys.exit(1)
@@ -127,32 +151,32 @@ def main():
         user_specified_packages = packages
         packages = INITRD_PKG_LIST
         config_options['auto_login'] = True
+        rootfs_dir, work_dir, iso_base, repo_file, rootfs_repo_dir, verbose = prepare_workspace(config_options)
+        use_cached = config_options.get('use_cached_rootfs')
+        if not use_cached:
+            rootfs_worker.make_rootfs(
+                rootfs_dir, packages, config_options, repo_file, rootfs_repo_dir, build_type, verbose)
 
-    rootfs_dir, work_dir, iso_base, repo_file, rootfs_repo_dir, verbose = prepare_workspace(config_options)
-
-    use_cached = config_options.get('use_cached_rootfs')
-    if not use_cached:
-        rootfs_worker.make_rootfs(
-            rootfs_dir, packages, config_options, repo_file, rootfs_repo_dir, build_type, verbose)
+            if build_type == TYPE_INSTALLER:
+                installer_maker.install_and_configure_installer(
+                    config_options, rootfs_dir, repo_file, rootfs_repo_dir, user_specified_packages)
+        else:
+            rootfs_worker.unzip_rootfs(work_dir, config_options, repo_file, rootfs_repo_dir, build_type, verbose)
+        logger.debug('Compressing rootfs ...')
+        rootfs_worker.compress_to_gz(rootfs_dir, work_dir)
 
         if build_type == TYPE_INSTALLER:
-            installer_maker.install_and_configure_installer(
-                config_options, rootfs_dir, repo_file, rootfs_repo_dir, user_specified_packages)
-    else:
-        rootfs_worker.unzip_rootfs(work_dir, config_options, repo_file, rootfs_repo_dir, build_type, verbose)
-    logger.debug('Compressing rootfs ...')
-    rootfs_worker.compress_to_gz(rootfs_dir, work_dir)
+            logger.debug('Downloading RPMs for installer ISO ...')
+            rpms_dir = iso_base + '/RPMS'
+            os.makedirs(rpms_dir)
+            pkg_fetcher.fetch_pkgs(rpms_dir, user_specified_packages, rootfs_dir, verbose=True)
+            subprocess.run('createrepo ' + rpms_dir, shell=True)
 
-    if build_type == TYPE_INSTALLER:
-        logger.debug('Downloading RPMs for installer ISO ...')
-        rpms_dir = iso_base + '/RPMS'
-        os.makedirs(rpms_dir)
-        pkg_fetcher.fetch_pkgs(rpms_dir, user_specified_packages, rootfs_dir, verbose=True)
-        subprocess.run('createrepo ' + rpms_dir, shell=True)
+        iso_worker.make_iso(iso_base, rootfs_dir, parsed_args.output_file)
+        logger.debug(f'ISO: openEuler-test.iso generated in: {work_dir}')
+    elif build_type == TYPE_RAW:
+        prepare_raw_workspace(config_options)
 
-    iso_worker.make_iso(iso_base, rootfs_dir, parsed_args.output_file)
-
-    logger.debug(f'ISO: openEuler-test.iso generated in: {work_dir}')
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.debug(f'Elapsed time: {elapsed_time} s')
