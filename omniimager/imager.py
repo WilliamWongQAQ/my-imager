@@ -108,16 +108,11 @@ def prepare_raw_workspace(config_options, image_name="test.raw"):
     os.makedirs(rootfs_dir)
     os.makedirs(rootfs_repo_dir)
     shutil.copy(repo_file, rootfs_repo_dir)
+    imager_name = work_dir + '/' + image_name
 
     logger.debug('create a virtual image...')
-    cmd = f"dd if=/dev/zero of={work_dir}/{image_name} bs=1M count=2000"
-    subprocess.run(cmd, shell=True)
-    cmd = f"fdisk {work_dir}/{image_name}"
-    subprocess.run(cmd, shell=True)
-    subprocess.run('n', shell=True)
-    subprocess.run('', shell=True)
-    subprocess.run('', shell=True)
-    subprocess.run('', shell=True)
+    os.system(f'./test.sh {imager_name}' )
+
 
 
 
