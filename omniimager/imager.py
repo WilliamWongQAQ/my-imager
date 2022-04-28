@@ -114,6 +114,11 @@ def prepare_raw_workspace(config_options, image_name="test.raw"):
     subprocess.run(cmd, shell=True)
     cmd = f"fdisk {work_dir}/{image_name}"
     subprocess.run(cmd, shell=True)
+    subprocess.run('n', shell=True)
+    subprocess.run('', shell=True)
+    subprocess.run('', shell=True)
+    subprocess.run('', shell=True)
+
 
 
 
