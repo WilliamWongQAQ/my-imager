@@ -25,6 +25,7 @@ def config_rootfs(dest_dir):
 
     logger.debug('Users and Selinux configuration finished in rootfs.')
 
+
 def compress_to_gz(dest_dir, work_dir):
     orig_dir = os.getcwd()
     os.chdir(dest_dir)
@@ -122,3 +123,14 @@ def make_rootfs(dest_dir, pkg_list, config_options,
         copy(config_source_dir + '/serial-getty@.service', dest_systemd_dir)
 
     config_rootfs(dest_dir)
+
+
+def make_raw_rootfs(dest_dir, pkg_list, config_options,
+                    repo_file, rootfs_repo_dir, build_type, verbose=True):
+    logger.debug('Making rootfs ...')
+    # Install filesystem first
+    if 'filesystem' in pkg_list:
+        pkg_fetcher.fetch_and_install_pkgs(dest_dir, ['filesystem'], repo_file, rootfs_repo_dir, verbose)
+        pkg_list.remove('filesystem')
+        # Replace openEuler.repo because filesystem override it
+        subprocess.run('rm -f ' + rootfs_repo_dir + '/openEuler.repo', shell=True)

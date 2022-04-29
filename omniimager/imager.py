@@ -14,6 +14,7 @@ from omniimager import iso_worker
 from omniimager import pkg_fetcher
 from omniimager.log_utils import logger
 from omniimager.params_parser import parser
+from omniimager.rootfs_worker import make_raw_rootfs
 
 ROOTFS_DIR = 'rootfs'
 DNF_COMMAND = 'dnf'
@@ -113,6 +114,7 @@ def prepare_raw_workspace(config_options, image_name="test.raw"):
 
     os.makedirs(rootfs_repo_dir)
     shutil.copy(repo_file, rootfs_repo_dir)
+    return rootfs_dir, work_dir, repo_file, rootfs_repo_dir
 
 
 def omni_interrupt_handler(signum, frame):
@@ -173,7 +175,8 @@ def main():
         iso_worker.make_iso(iso_base, rootfs_dir, parsed_args.output_file)
         logger.debug(f'ISO: openEuler-test.iso generated in: {work_dir}')
     elif build_type == TYPE_RAW:
-        prepare_raw_workspace(config_options)
+        rootfs_dir, work_dir, repo_file, rootfs_repo_dir = prepare_raw_workspace(config_options)
+        make_raw_rootfs(rootfs_dir, packages, config_options, repo_file, rootfs_repo_dir, build_type)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
