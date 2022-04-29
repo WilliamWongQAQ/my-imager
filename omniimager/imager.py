@@ -111,7 +111,7 @@ def prepare_raw_workspace(config_options, image_name="test.raw"):
     imager_name = work_dir + '/' + image_name
     subprocess.run('chmod 777 /home/python_projects/my-imager/omniimager/test.sh', shell=True)
     logger.debug('create a virtual image...')
-    os.system(f'/home/python_projects/my-imager/omniimager/test.sh {imager_name}')
+    os.system(f'/home/python_projects/my-imager/omniimager/test.sh {imager_name} {rootfs_dir}')
 
 
 def omni_interrupt_handler(signum, frame):
