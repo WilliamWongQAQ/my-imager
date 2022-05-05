@@ -135,5 +135,4 @@ def make_raw_rootfs(dest_dir, pkg_list, config_options,
         # Replace openEuler.repo because filesystem override it
         subprocess.run('rm -f ' + rootfs_repo_dir + '/openEuler.repo', shell=True)
     pkg_fetcher.fetch_and_install_pkgs(dest_dir, pkg_list, repo_file, rootfs_repo_dir, verbose)
-    prepare_init_script(config_options, dest_dir)
     config_rootfs(dest_dir)
