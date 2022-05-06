@@ -7,7 +7,6 @@ systemd_configs: /etc/omni-imager/installer_assets/systemd-configs
 init_script: /etc/omni-imager/init
 installer_script: /etc/omni-imager/runinstaller
 repo_file: /etc/omni-imager/repos/openEuler-22.03-LTS.repo
-use_cached_rootfs: True
 cached_rootfs_gz: /opt/rootfs_cache/rootfs.tar.gz
 log_level: DEBUG
 log_dir: /var/log/omni-imager
