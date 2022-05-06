@@ -10,6 +10,6 @@ p
 w
 EOF
 
-losetup /dev/loop7 -o 2097152 /opt/omni-workspace/test.raw
+losetup /dev/loop7 /opt/omni-workspace/test.raw
 mkfs.ext4 /dev/loop7
 mount -t ext4 /dev/loop7 ${2}
