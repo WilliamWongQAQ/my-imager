@@ -11,6 +11,6 @@ p
 w
 EOF
 
-losetup /dev/loop100 -o 1048576 /opt/omni-workspace/test.raw
+losetup /dev/loop100 -o 1048576 ${1}
 mkfs.ext4 /dev/loop100
 mount -t ext4 /dev/loop7 ${2}
