@@ -177,7 +177,8 @@ def main():
     elif build_type == TYPE_RAW:
         rootfs_dir, work_dir, repo_file, rootfs_repo_dir = prepare_raw_workspace(config_options)
         make_raw_rootfs(rootfs_dir, packages, config_options, repo_file, rootfs_repo_dir, build_type)
-
+        imager_name = work_dir + '/' + 'test.raw'
+        subprocess.run(f'grub2-install --boot-directory={rootfs_dir} --target=i386-pc --modules=part_msdos  {imager_name}',shell=True)
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.debug(f'Elapsed time: {elapsed_time} s')

@@ -1,4 +1,4 @@
-working_dir: /opt/omni-workspace
+working_dir: /opt/my-workspace
 debug: False
 user_name: root
 user_passwd: openEuler
